@@ -43,6 +43,13 @@ def process_file(n, i):
         messagebox.showerror("处理错误", f"处理文件时发生错误：{e}")
         return None
 
+
+def is_chinese(str):
+    for i in str:
+        if '\u4e00' <= i <= '\u9fa5':
+            return True
+        
+
 def transform(name, qs, n, i, save_path):
     try:
         file_path = os.path.join(save_path, f"{n}_{name}.txt")
@@ -54,8 +61,11 @@ def transform(name, qs, n, i, save_path):
             for idx in range(n_qs):
                 options = []
                 answers = []
-                for o in range(len(qs[idx]['o'])):
-                    options.append(remove_newlines(str(qs[idx]['o'][o])))
+                if int(qs[idx]['k']) != 4: #不是判断题
+                    for o in range(len(qs[idx]['o'])):
+                        options.append(remove_newlines(str(qs[idx]['o'][o])))
+                else:
+                    options =['对','错']
                 for a in range(len(qs[idx]['a'])):
                     answers.append(remove_newlines(str(qs[idx]['a'][a])))
                 difficulty = remove_newlines(str(qs[idx]['d']))
@@ -64,6 +74,14 @@ def transform(name, qs, n, i, save_path):
                 answer = ''
                 for j in range(len(answers)):
                     answer += str(ord(answers[j].upper()) - ord("A") + 1)
+                if len(answers) != 1:
+                    tag = "多选"
+                elif int(qs[i]['k']) != 4:
+                    tag = "单选"
+                else:
+                    tag = "判断"
+                if not is_chinese(question):
+                    tag+= " 英文"
                 # 正确处理 {{c1::}}，需要在f-string中转义花括号
                 line = (
                     f"{name}{separator}"
@@ -71,7 +89,7 @@ def transform(name, qs, n, i, save_path):
                     f"{question}:{{{{c1::}}}}{separator}"
                     f"{'||'.join(options)}{separator}"
                     f"{'||'.join(answer)}{separator}"
-                    f"难度:{difficulty}；易错项:{false}{separator}\n"
+                    f"难度:{difficulty}；易错项:{false}{separator}{tag}\n"
                 )
                 file.write(line)
         messagebox.showinfo("成功", f"文件已成功保存到 {file_path}")
