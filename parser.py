@@ -4,6 +4,11 @@ import requests
 import gzip
 from io import BytesIO
 
+def is_chinese(str):
+    for i in str:
+        if '\u4e00' <= i <= '\u9fa5':
+            return True
+
 def transform(name,qs,n,i):
     with open (f"{n}_{name}.txt", 'a', encoding='utf-8') as file:
         headers = "#separator:tab\n#html:true\n#deck column:1\n#tags column:7\n"
@@ -13,17 +18,28 @@ def transform(name,qs,n,i):
         for i in range(n):
             options=[]
             answers=[]
-            for o in range(len(qs[i]['o'])):
-                options.append(remove_newlines(str(qs[i]['o'][o])))
+            if int(qs[i]['k']) != 4: #不是判断题
+                for o in range(len(qs[i]['o'])):
+                    options.append(remove_newlines(str(qs[i]['o'][o])))
+            else:
+                options =['对','错']
             for a in range(len(qs[i]['a'])):
                 answers.append(remove_newlines(str(qs[i]['a'][a])))
             difficulty = remove_newlines(str(qs[i]['d']))
-            false = remove_newlines(qs[i]['f'])
+            false = remove_newlines(qs[i]['f']) #易错项
             question = remove_newlines(qs[i]['s'])
             answer = ''
+            if len(answers) != 1:
+                tag = "多选"
+            elif int(qs[i]['k']) != 4:
+                tag = "单选"
+            else:
+                tag = "判断"
+            if not is_chinese(question):
+                tag+= " 英文"
             for j in range(len(answers)):
                 answer += str(ord(answers[j])-ord("A")+1)
-            file.write(name+separator+f"{name}#"+str(i)+separator+question+":{{c1::}}"+separator+"||".join(options)+separator+"||".join(answer)+separator+"难度:"+difficulty+"；"+"易错项:"+false+separator+"\n")
+            file.write(name+separator+f"{name}#"+str(i)+separator+question+":{{c1::}}"+separator+"||".join(options)+separator+"||".join(answer)+separator+"难度:"+difficulty+"；"+"易错项:"+false+separator+tag+"\n")
         print("写入成功")
 def download(url):
     response = requests.get(url)
