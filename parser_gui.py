@@ -74,9 +74,10 @@ def transform(name, qs, n, i, save_path):
                 answer = ''
                 for j in range(len(answers)):
                     answer += str(ord(answers[j].upper()) - ord("A") + 1)
+                tag=''
                 if len(answers) != 1:
                     tag = "多选"
-                elif int(qs[i]['k']) != 4:
+                elif int(qs[idx]['k']) != 4:
                     tag = "单选"
                 else:
                     tag = "判断"
